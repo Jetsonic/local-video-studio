@@ -224,8 +224,8 @@ function buildErnieWorkflow(prompt: string, w: number, h: number, unetName: stri
 function buildWan22T2V(prompt: string, w: number, h: number, frames: number): object {
   return {
     '1': { class_type: 'UNETLoader', inputs: { unet_name: 'wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors', weight_dtype: 'fp8_e4m3fn' } },
-    '2': { class_type: 'CLIPLoader', inputs: { clip_name: 'umt5xxl_fp8_e4m3fn.safetensors', type: 'wan' } },
-    '3': { class_type: 'VAELoader', inputs: { vae_name: 'wan_2.1_vae.safetensors' } },
+    '2': { class_type: 'CLIPLoader', inputs: { clip_name: 'umt5_xxl_fp8_e4m3fn_scaled.safetensors', type: 'wan' } },
+    '3': { class_type: 'VAELoader', inputs: { vae_name: 'wan2.2_vae.safetensors' } },
     '4': { class_type: 'CLIPTextEncode', inputs: { clip: ['2', 0], text: prompt } },
     '5': { class_type: 'CLIPTextEncode', inputs: { clip: ['2', 0], text: 'worst quality, low quality, blurry, watermark' } },
     '6': { class_type: 'EmptyHunyuanLatentVideo', inputs: { width: w, height: h, length: frames, batch_size: 1 } },
@@ -238,8 +238,8 @@ function buildWan22T2V(prompt: string, w: number, h: number, frames: number): ob
 function buildWan22I2V(prompt: string, imageName: string, w: number, h: number, frames: number): object {
   return {
     '1': { class_type: 'UNETLoader', inputs: { unet_name: 'wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors', weight_dtype: 'fp8_e4m3fn' } },
-    '2': { class_type: 'CLIPLoader', inputs: { clip_name: 'umt5xxl_fp8_e4m3fn.safetensors', type: 'wan' } },
-    '3': { class_type: 'VAELoader', inputs: { vae_name: 'wan_2.1_vae.safetensors' } },
+    '2': { class_type: 'CLIPLoader', inputs: { clip_name: 'umt5_xxl_fp8_e4m3fn_scaled.safetensors', type: 'wan' } },
+    '3': { class_type: 'VAELoader', inputs: { vae_name: 'wan2.2_vae.safetensors' } },
     '4': { class_type: 'LoadImage', inputs: { image: imageName } },
     '5': { class_type: 'CLIPTextEncode', inputs: { clip: ['2', 0], text: prompt } },
     '6': { class_type: 'CLIPTextEncode', inputs: { clip: ['2', 0], text: 'worst quality, low quality, blurry, watermark' } },
@@ -280,29 +280,26 @@ function buildHunyuanI2V(prompt: string, imageName: string, w: number, h: number
 }
 
 function buildLTXVT2V(prompt: string, w: number, h: number, frames: number): object {
+  // CheckpointLoaderSimple bundles model+clip+vae; avoids need for separate ltxv vae file
   return {
-    '1': { class_type: 'UNETLoader', inputs: { unet_name: 'ltx-video-2b-v0.9.5.safetensors', weight_dtype: 'default' } },
-    '2': { class_type: 'CLIPLoader', inputs: { clip_name: 't5xxl_fp8_e4m3fn.safetensors', type: 'ltxv' } },
-    '3': { class_type: 'VAELoader', inputs: { vae_name: 'ltxv-spatial-vae-diffusers.safetensors' } },
-    '4': { class_type: 'CLIPTextEncode', inputs: { clip: ['2', 0], text: prompt } },
-    '5': { class_type: 'CLIPTextEncode', inputs: { clip: ['2', 0], text: 'worst quality, low quality, blurry, jitter, watermark' } },
-    '6': { class_type: 'EmptyLTXVLatentVideo', inputs: { width: w, height: h, length: frames, batch_size: 1 } },
-    '7': { class_type: 'KSampler', inputs: { model: ['1', 0], positive: ['4', 0], negative: ['5', 0], latent_image: ['6', 0], seed: rnd(), steps: 25, cfg: 3, sampler_name: 'euler', scheduler: 'ltxv_linear_quadratic', denoise: 1.0 } },
-    '8': { class_type: 'VAEDecode', inputs: { samples: ['7', 0], vae: ['3', 0] } },
-    '9': { class_type: 'SaveAnimatedWEBP', inputs: { images: ['8', 0], filename_prefix: 'lvs_ltxv_t2v', fps: 24, lossless: false, quality: 85, method: 'default' } },
+    '1': { class_type: 'CheckpointLoaderSimple', inputs: { ckpt_name: 'ltx-video-2b-v0.9.5.safetensors' } },
+    '2': { class_type: 'CLIPTextEncode', inputs: { clip: ['1', 1], text: prompt } },
+    '3': { class_type: 'CLIPTextEncode', inputs: { clip: ['1', 1], text: 'worst quality, low quality, blurry, jitter, watermark' } },
+    '4': { class_type: 'EmptyLTXVLatentVideo', inputs: { width: w, height: h, length: frames, batch_size: 1 } },
+    '5': { class_type: 'KSampler', inputs: { model: ['1', 0], positive: ['2', 0], negative: ['3', 0], latent_image: ['4', 0], seed: rnd(), steps: 25, cfg: 3, sampler_name: 'euler', scheduler: 'ltxv_linear_quadratic', denoise: 1.0 } },
+    '6': { class_type: 'VAEDecode', inputs: { samples: ['5', 0], vae: ['1', 2] } },
+    '7': { class_type: 'SaveAnimatedWEBP', inputs: { images: ['6', 0], filename_prefix: 'lvs_ltxv_t2v', fps: 24, lossless: false, quality: 85, method: 'default' } },
   }
 }
 
 function buildLTXVI2V(prompt: string, imageName: string, w: number, h: number, frames: number): object {
   return {
-    '1': { class_type: 'UNETLoader', inputs: { unet_name: 'ltx-video-2b-v0.9.5.safetensors', weight_dtype: 'default' } },
-    '2': { class_type: 'CLIPLoader', inputs: { clip_name: 't5xxl_fp8_e4m3fn.safetensors', type: 'ltxv' } },
-    '3': { class_type: 'VAELoader', inputs: { vae_name: 'ltxv-spatial-vae-diffusers.safetensors' } },
-    '4': { class_type: 'LoadImage', inputs: { image: imageName } },
-    '5': { class_type: 'CLIPTextEncode', inputs: { clip: ['2', 0], text: prompt } },
-    '6': { class_type: 'CLIPTextEncode', inputs: { clip: ['2', 0], text: 'worst quality, low quality, blurry, jitter, watermark' } },
-    '7': { class_type: 'LTXVImgToVideo', inputs: { model: ['1', 0], clip: ['2', 0], vae: ['3', 0], image: ['4', 0], positive: ['5', 0], negative: ['6', 0], width: w, height: h, length: frames, batch_size: 1, seed: rnd(), steps: 25, cfg: 3, sampler_name: 'euler', scheduler: 'ltxv_linear_quadratic', denoise: 1.0 } },
-    '8': { class_type: 'VAEDecode', inputs: { samples: ['7', 0], vae: ['3', 0] } },
-    '9': { class_type: 'SaveAnimatedWEBP', inputs: { images: ['8', 0], filename_prefix: 'lvs_ltxv_i2v', fps: 24, lossless: false, quality: 85, method: 'default' } },
+    '1': { class_type: 'CheckpointLoaderSimple', inputs: { ckpt_name: 'ltx-video-2b-v0.9.5.safetensors' } },
+    '2': { class_type: 'LoadImage', inputs: { image: imageName } },
+    '3': { class_type: 'CLIPTextEncode', inputs: { clip: ['1', 1], text: prompt } },
+    '4': { class_type: 'CLIPTextEncode', inputs: { clip: ['1', 1], text: 'worst quality, low quality, blurry, jitter, watermark' } },
+    '5': { class_type: 'LTXVImgToVideo', inputs: { model: ['1', 0], clip: ['1', 1], vae: ['1', 2], image: ['2', 0], positive: ['3', 0], negative: ['4', 0], width: w, height: h, length: frames, batch_size: 1, seed: rnd(), steps: 25, cfg: 3, sampler_name: 'euler', scheduler: 'ltxv_linear_quadratic', denoise: 1.0 } },
+    '6': { class_type: 'VAEDecode', inputs: { samples: ['5', 0], vae: ['1', 2] } },
+    '7': { class_type: 'SaveAnimatedWEBP', inputs: { images: ['6', 0], filename_prefix: 'lvs_ltxv_i2v', fps: 24, lossless: false, quality: 85, method: 'default' } },
   }
 }
