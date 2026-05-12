@@ -11,15 +11,24 @@
     </div>
 
     <!-- Media preview -->
-    <div class="relative aspect-video bg-black/30 rounded-lg overflow-hidden">
+    <div class="relative bg-black/30 rounded-lg overflow-hidden">
+      <!-- compiled clip: full width with controls -->
       <video v-if="scene.compiled_clip_path" :src="scene.compiled_clip_path"
-        class="w-full h-full object-cover" controls />
+        class="w-full aspect-video object-cover" controls />
+      <!-- both image and video: show side by side -->
+      <div v-else-if="scene.image_path && scene.video_path" class="flex gap-1">
+        <img :src="scene.image_path" class="w-1/2 aspect-video object-cover" />
+        <img v-if="scene.video_path.endsWith('.webp')" :src="scene.video_path" class="w-1/2 aspect-video object-cover" />
+        <video v-else :src="scene.video_path" class="w-1/2 aspect-video object-cover" autoplay loop muted />
+      </div>
+      <!-- video only -->
       <img v-else-if="scene.video_path?.endsWith('.webp')" :src="scene.video_path"
-        class="w-full h-full object-cover" />
+        class="w-full aspect-video object-cover" />
       <video v-else-if="scene.video_path" :src="scene.video_path"
-        class="w-full h-full object-cover" autoplay loop muted />
-      <img v-else-if="scene.image_path" :src="scene.image_path" class="w-full h-full object-cover" />
-      <div v-else class="absolute inset-0 flex items-center justify-center text-gray-700 text-xs">No media</div>
+        class="w-full aspect-video object-cover" autoplay loop muted />
+      <!-- image only -->
+      <img v-else-if="scene.image_path" :src="scene.image_path" class="w-full aspect-video object-cover" />
+      <div v-else class="aspect-video flex items-center justify-center text-gray-700 text-xs">No media</div>
       <div v-if="isGenerating" class="absolute inset-0 bg-black/50 flex items-center justify-center">
         <div class="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
