@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #1a1a1a; }
+  ::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #555; }
+}
+
+@layer components {
+  .btn { @apply px-4 py-2 rounded-lg font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed; }
+  .btn-primary { @apply btn bg-accent hover:bg-accent-hover text-white; }
+  .btn-ghost { @apply btn bg-transparent hover:bg-white/5 text-gray-300; }
+  .btn-danger { @apply btn bg-red-600/20 hover:bg-red-600/40 text-red-400; }
+  .input { @apply w-full bg-panel border border-border rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors; }
+  .card { @apply bg-panel border border-border rounded-xl p-4; }
+  .badge { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium; }
+  .badge-idle { @apply badge bg-gray-700 text-gray-300; }
+  .badge-generating { @apply badge bg-yellow-600/30 text-yellow-300 animate-pulse; }
+  .badge-done { @apply badge bg-green-600/30 text-green-400; }
+  .badge-error { @apply badge bg-red-600/30 text-red-400; }
+}
